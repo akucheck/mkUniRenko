@@ -27,8 +27,9 @@ open System
 open System.IO
 open FilterIoLib
 open MkUniRenkoTypes
-let dnComplete (price : float) (tickValue : float) 
-    (currBarState : float * float * float * float * string) (offsetParm: int) =
+
+let complete (price : float) (tickValue : float) 
+    (currBarState : float * float * float * float * string) (offsetParm: int) (nbDirection: string) =
     let currOpen, currHigh, currLow, _currClose, direction = currBarState
     let offsetParmFactor =
         if direction = "U" then -1
@@ -46,36 +47,12 @@ let dnComplete (price : float) (tickValue : float)
     let newBarHigh = price
     let newBarLow = price
     let newBarClose = 0.00
-    let newBarDirection = "D" // determines whether dnTrend or upReversal is next target
+    let newBarDirection = nbDirection // "D" // determines whether dnTrend or upReversal is next target
     let newBar = newBarOpen, newBarHigh, newBarLow, newBarClose, newBarDirection
     (barComplete, completedBar, newBar)
 
-let upComplete (price : float) (tickValue : float) 
-    (currBarState : float * float * float * float * string) (offsetParm: int) =
-    let currOpen, currHigh, currLow, _currClose, direction = currBarState
-    let offsetParmFactor =
-        if direction = "U" then -1
-        else 1
-    let barComplete = true
-    let completedBarOpen = currOpen + (tickValue * float offsetParm  * float offsetParmFactor) 
-    let completedBarHigh = currHigh
-    let completedBarLow = currLow
-    let completedBarClose = price
-    let completedBarDirection = "U" // never really needed
-    let completedBar =
-        completedBarOpen, completedBarHigh, completedBarLow, completedBarClose, 
-        completedBarDirection
-    let newBarOpen = price 
-    let newBarHigh = price
-    let newBarLow = price
-    let newBarClose = 0.00
-    let newBarDirection = "U"
-    let newBar = newBarOpen, newBarHigh, newBarLow, newBarClose, newBarDirection
-    (barComplete, completedBar, newBar)
-
-
-let barIncomplete (_price : float) (_tickValue : float) 
-    (currBarState : float * float * float * float * string) =
+let incomplete (_price : float) (_tickValue : float) 
+    (currBarState : float * float * float * float * string) (_nbDirection: string) =
     (false, currBarState, currBarState)
 
 let (|DnTrendTarget|_|) (priceTargets, price, direction) =
@@ -130,11 +107,11 @@ let priceTargets uOpen (tickValue : float) (trendParm : int)
 let isBarComplete priceTargets price tickValue currBarState offsetParm =
     let _currOpen, _currHigh, _currLow, _currClose, direction = currBarState
     match (priceTargets, price, direction) with
-    | DnTrendTarget -> dnComplete price tickValue currBarState offsetParm
-    | UpTrendTarget -> upComplete price tickValue currBarState offsetParm
-    | DnReversalTarget -> dnComplete price tickValue currBarState offsetParm
-    | UpReversalTarget -> upComplete price tickValue currBarState offsetParm
-    | _ -> barIncomplete price tickValue currBarState
+    | DnTrendTarget -> complete price tickValue currBarState offsetParm "D"
+    | UpTrendTarget -> complete price tickValue currBarState offsetParm "U"
+    | DnReversalTarget -> complete price tickValue currBarState offsetParm "D"
+    | UpReversalTarget -> complete price tickValue currBarState offsetParm "U"
+    | _ -> incomplete price tickValue currBarState "_"
 
 let formatOutputBar (completedBar : float * float * float * float * string) =
     let completedBarOpen, completedBarHigh, completedBarLow, completedBarClose, 
