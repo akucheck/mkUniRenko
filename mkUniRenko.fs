@@ -34,7 +34,7 @@ open MkUniRenkoUtils
 // ========================================================
 let complete (price : float) (tickValue : float) 
     (currBarState : float * float * float * float * string) (offsetParm : int) 
-    (nbDirection : string) (lastFlag: string) =
+    (nbDirection : string) (lastFlag : string) =
     let currOpen, currHigh, currLow, _currClose, direction = currBarState
     
     let offsetParmFactor = // sets direction of offsetParm based on prior bar
@@ -62,23 +62,28 @@ let complete (price : float) (tickValue : float)
 // no-op func for catchall case in match that calls it
 let incomplete (_price : float) (_tickValue : float) 
     (currBarState : float * float * float * float * string) 
-    (_nbDirection : string) (lastFlag:string) = (false, currBarState, currBarState)
+    (_nbDirection : string) (lastFlag : string) =
+    (false, currBarState, currBarState)
 
 let isBarComplete priceTargets price tickValue currBarState offsetParm lastFlag =
     let _currOpen, _currHigh, _currLow, _currClose, direction = currBarState
     match (priceTargets, price, direction, lastFlag) with
-    | DnTrendTarget -> complete price tickValue currBarState offsetParm "D" lastFlag
-    | UpTrendTarget -> complete price tickValue currBarState offsetParm "U" lastFlag
-    | DnReversalTarget -> complete price tickValue currBarState offsetParm "D" lastFlag
-    | UpReversalTarget -> complete price tickValue currBarState offsetParm "U" lastFlag
+    | DnTrendTarget -> 
+        complete price tickValue currBarState offsetParm "D" lastFlag
+    | UpTrendTarget -> 
+        complete price tickValue currBarState offsetParm "U" lastFlag
+    | DnReversalTarget -> 
+        complete price tickValue currBarState offsetParm "D" lastFlag
+    | UpReversalTarget -> 
+        complete price tickValue currBarState offsetParm "U" lastFlag
     | LastRow -> complete price tickValue currBarState offsetParm "U" lastFlag
     | _ -> incomplete price tickValue currBarState "_" lastFlag
 
+// ========================================================
+// main function to build bar, write to output file
+// ========================================================
 let buildBars (clParams : StreamWriter * int * int * int * float) 
     (barState : string) (line : string) =
-    // ========================================================
-    // main function to build bar, write to file
-    // ========================================================
     // unpack everything we need
     let uOpen, uHigh, uLow, uClose, direction = unpackBarState (barState)
     let outFile, trendParm, reversalParm, offsetParm, tickValue = clParams
@@ -86,12 +91,11 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     
     // Until the first bar is complete, direction is unknown: "X"
     // after that, direction will always be "U" or "D"
-    // uOpen = uLow = 0.00 will only be true for 1st input row of data
-    let newOpen =
+    let newOpen = // uOpen = 0.00 only be true prior to reading 1st row of data
         if uOpen = 0.00 then theInputRow.Price
         else uOpen
     
-    let newLow =
+    let newLow = // uLow = 0.00 only be true prior to reading 1st row of data
         if uLow = 0.00 then theInputRow.Price
         else uLow
     
@@ -100,19 +104,19 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     let newLow = min newLow theInputRow.Price
     let priceTargets = // establish price targets for bar close
         priceTargets uOpen tickValue trendParm reversalParm
-    let openBar = // tuple values to more easily pass around
+    let openBar = // group the values into tuple to more easily pass around
         (newOpen, newHigh, newLow, uClose, direction)
-    let barIsComplete, completedBar, newBar = // have we met a trend target?
+    let barIsComplete, completedBar, newBar = // have we met a target?
         isBarComplete priceTargets theInputRow.Price tickValue openBar 
             offsetParm theInputRow.LastFlag
-    // next line it the whole reason we are here:
+    // next line is the whole reason we are here:
     if (barIsComplete) then outFile.WriteLine(formatOutputBar completedBar)
+    // TODO: change this to serialize ohlcRow  ^^^^^
     let barState =
-        if (barIsComplete) then newBar
-        else openBar
+        if (barIsComplete) then newBar // create new bar, then rinse, repeat
+        else openBar // keep going
     
     let newState = packBarState barState
-    
     newState
 
 [<EntryPoint>]

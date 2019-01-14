@@ -10,7 +10,7 @@ let priceTargets uOpen (tickValue : float) (trendParm : int)
     (dnTrendTarget, upTrendTarget, dnReversalTarget, upReversalTarget)
 
 // ========================================================
-// all active patterns for determining whether bar is complete
+// active patterns for determining whether bar is complete
 // ========================================================
 let (|UpTrendTarget|_|) (priceTargets, price, direction, lastFlag : string) =
     let _dnTrendTarget, upTrendTarget, _dnReversalTarget, _upReversalTarget =
