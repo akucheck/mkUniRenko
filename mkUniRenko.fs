@@ -29,7 +29,7 @@ open FilterIoLib
 open MkUniRenkoTypes
 let dnComplete (price : float) (tickValue : float) 
     (currBarState : float * float * float * float * string) (offsetParm: int) =
-    let currOpen, currHigh, currLow, currClose, direction = currBarState
+    let currOpen, currHigh, currLow, _currClose, direction = currBarState
     let offsetParmFactor =
         if direction = "U" then -1
         else 1
@@ -52,7 +52,7 @@ let dnComplete (price : float) (tickValue : float)
 
 let upComplete (price : float) (tickValue : float) 
     (currBarState : float * float * float * float * string) (offsetParm: int) =
-    let currOpen, currHigh, currLow, currClose, direction = currBarState
+    let currOpen, currHigh, currLow, _currClose, direction = currBarState
     let offsetParmFactor =
         if direction = "U" then -1
         else 1
@@ -74,27 +74,27 @@ let upComplete (price : float) (tickValue : float)
     (barComplete, completedBar, newBar)
 
 
-let barIncomplete (price : float) (tickValue : float) 
+let barIncomplete (_price : float) (_tickValue : float) 
     (currBarState : float * float * float * float * string) =
     (false, currBarState, currBarState)
 
 let (|DnTrendTarget|_|) (priceTargets, price, direction) =
-    let dnTrendTarget, upTrendTarget, dnReversalTarget, upReversalTarget = priceTargets
+    let dnTrendTarget, _upTrendTarget, _dnReversalTarget, _upReversalTarget = priceTargets
     if (price = dnTrendTarget && direction <> "U") then Some()
     else None
 
 let (|UpTrendTarget|_|) (priceTargets, price, direction) =
-    let dnTrendTarget, upTrendTarget, dnReversalTarget, upReversalTarget = priceTargets
+    let _dnTrendTarget, upTrendTarget, _dnReversalTarget, _upReversalTarget = priceTargets
     if (price = upTrendTarget && direction <> "D") then Some()
     else None
 
 let (|DnReversalTarget|_|) (priceTargets, price, direction) =
-    let dnTrendTarget, upTrendTarget, dnReversalTarget, upReversalTarget = priceTargets
+    let _dnTrendTarget, _upTrendTarget, dnReversalTarget, _upReversalTarget = priceTargets
     if (price = dnReversalTarget && direction = "U") then Some()
     else None
 
 let (|UpReversalTarget|_|) (priceTargets, price, direction) =
-    let dnTrendTarget, upTrendTarget, dnReversalTarget, upReversalTarget = priceTargets
+    let _dnTrendTarget, _upTrendTarget, _dnReversalTarget, upReversalTarget = priceTargets
     if (price = upReversalTarget && direction = "D") then Some()
     else None
 
@@ -127,8 +127,8 @@ let priceTargets uOpen (tickValue : float) (trendParm : int)
     let upReversalTarget = uOpen + (tickValue * float reversalParm)
     (dnTrendTarget, upTrendTarget, dnReversalTarget, upReversalTarget)
 
-let isBarComplete (priceTargets, price, tickValue, currBarState, offsetParm) =
-    let currOpen, currHigh, currLow, currClose, direction = currBarState
+let isBarComplete priceTargets price tickValue currBarState offsetParm =
+    let _currOpen, _currHigh, _currLow, _currClose, direction = currBarState
     match (priceTargets, price, direction) with
     | DnTrendTarget -> dnComplete price tickValue currBarState offsetParm
     | UpTrendTarget -> upComplete price tickValue currBarState offsetParm
@@ -138,7 +138,7 @@ let isBarComplete (priceTargets, price, tickValue, currBarState, offsetParm) =
 
 let formatOutputBar (completedBar : float * float * float * float * string) =
     let completedBarOpen, completedBarHigh, completedBarLow, completedBarClose, 
-        completedBarDirection = completedBar
+        _completedBarDirection = completedBar
     let outputString =
         completedBarOpen.ToString("F2") + "," + completedBarHigh.ToString("F2") 
         + "," + completedBarLow.ToString("F2") + "," 
@@ -172,7 +172,7 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
         (newOpen, newHigh, newLow, uClose, direction)
     let barIsComplete, completedBar, newBar = // have we met a trend target?
         isBarComplete
-            (priceTargets, theInputRow.Price, tickValue, openBar, offsetParm)
+            priceTargets theInputRow.Price tickValue openBar offsetParm
     // next line it the whole reason we are here:
     if (barIsComplete) then outFile.WriteLine(formatOutputBar completedBar) 
     let barState =
