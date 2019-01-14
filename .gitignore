@@ -1,0 +1,7 @@
+paket-files/
+data.in/
+data.out/
+bin/
+obj/
+outosx/
+
