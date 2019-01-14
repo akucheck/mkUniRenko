@@ -11,14 +11,6 @@ type InputRow =
       AggDelta : int
       LastFlag : string }
 
-type UniRenkoRow =
-    { SeqNum1 : int
-      UniRole1 : int
-      SeqNum2 : int
-      UniRole2 : int
-      SeqNum3 : int
-      UniRole3 : int }
-
 let deserializeInputRow (line : string) =
     let lineArray = line.Split(',')
     
@@ -33,6 +25,30 @@ let deserializeInputRow (line : string) =
           AggDelta = int lineArray.[7]
           LastFlag = lineArray.[8] }
     currInputRow
+    
+type OhlcRow = 
+    { pOpen: float
+      pHigh: float
+      pLow: float
+      pClose: float }
+
+let serializeUniOhlcRow (currRow : OhlcRow) =
+    let lineArray =
+        [| currRow.pOpen.ToString("F2")
+           currRow.pHigh.ToString("F2")
+           currRow.pLow.ToString("F2")
+           currRow.pClose.ToString("F2") |]
+    
+    let currOhlcRow = String.concat "," lineArray
+    currOhlcRow
+
+type UniRenkoRow =
+    { SeqNum1 : int
+      UniRole1 : int
+      SeqNum2 : int
+      UniRole2 : int
+      SeqNum3 : int
+      UniRole3 : int }
 
 let serializeUniRenkoRow (currRow : UniRenkoRow) =
     let lineArray =
