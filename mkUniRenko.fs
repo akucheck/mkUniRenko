@@ -22,21 +22,12 @@ expected output: a UniRenko bar file
 
 *)
 
-
 open System
 open System.IO
 open FilterIoLib
 open MkUniRenkoTypes
 open MkUniRenkoTargets
-
-let priceTargets uOpen (tickValue : float) (trendParm : int) 
-    (reversalParm : int) =
-    // compute all price targets based on clParams 
-    let dnTrendTarget = uOpen - (tickValue * float trendParm)
-    let upTrendTarget = uOpen + (tickValue * float trendParm)
-    let dnReversalTarget = uOpen - (tickValue * float reversalParm)
-    let upReversalTarget = uOpen + (tickValue * float reversalParm)
-    (dnTrendTarget, upTrendTarget, dnReversalTarget, upReversalTarget)
+open MkUniRenkoUtils
 
 // ========================================================
 // all bar completion functions
@@ -80,39 +71,6 @@ let isBarComplete priceTargets price tickValue currBarState offsetParm =
     | DnReversalTarget -> complete price tickValue currBarState offsetParm "D"
     | UpReversalTarget -> complete price tickValue currBarState offsetParm "U"
     | _ -> incomplete price tickValue currBarState "_"
-
-// ========================================================
-// all bar state handling, formatting functions
-// ========================================================
-let unpackState (barState : string) =
-    let barStateArray = barState.Split(',') // unpack current accumulator state
-    let uOpen = float barStateArray.[0]
-    let uHigh = float barStateArray.[1]
-    let uLow = float barStateArray.[2]
-    let uClose = float barStateArray.[3]
-    let direction = barStateArray.[4]
-    (uOpen, uHigh, uLow, uClose, direction)
-
-let packState (newOpen : float, newHigh : float, newLow : float, 
-               newClose : float, newDirection) =
-    let barStateArray =
-        [| newOpen.ToString("F2")
-           newHigh.ToString("F2")
-           newLow.ToString("F2")
-           newClose.ToString("F2")
-           newDirection.ToString() |]
-    
-    let newState = barStateArray |> String.concat (",")
-    newState
-
-let formatOutputBar (completedBar : float * float * float * float * string) =
-    let completedBarOpen, completedBarHigh, completedBarLow, completedBarClose, 
-        _completedBarDirection = completedBar
-    let outputString =
-        completedBarOpen.ToString("F2") + "," + completedBarHigh.ToString("F2") 
-        + "," + completedBarLow.ToString("F2") + "," 
-        + completedBarClose.ToString("F2")
-    outputString
 
 let buildBars (clParams : StreamWriter * int * int * int * float) 
     (barState : string) (line : string) =

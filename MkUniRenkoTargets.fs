@@ -1,5 +1,14 @@
 module MkUniRenkoTargets
 
+let priceTargets uOpen (tickValue : float) (trendParm : int) 
+    (reversalParm : int) =
+    // compute all price targets based on clParams 
+    let dnTrendTarget = uOpen - (tickValue * float trendParm)
+    let upTrendTarget = uOpen + (tickValue * float trendParm)
+    let dnReversalTarget = uOpen - (tickValue * float reversalParm)
+    let upReversalTarget = uOpen + (tickValue * float reversalParm)
+    (dnTrendTarget, upTrendTarget, dnReversalTarget, upReversalTarget)
+    
 // ========================================================
 // all active patterns for determining whether bar is complete
 // ========================================================
