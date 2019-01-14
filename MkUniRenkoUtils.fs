@@ -3,7 +3,7 @@ module MkUniRenkoUtils
 // ========================================================
 // all bar state handling, formatting functions
 // ========================================================
-let unpackState (barState : string) =
+let unpackBarState (barState : string) =
     let barStateArray = barState.Split(',') // unpack current accumulator state
     let uOpen = float barStateArray.[0]
     let uHigh = float barStateArray.[1]
@@ -12,8 +12,8 @@ let unpackState (barState : string) =
     let direction = barStateArray.[4]
     (uOpen, uHigh, uLow, uClose, direction)
 
-let packState (newOpen : float, newHigh : float, newLow : float, 
-               newClose : float, newDirection) =
+let packBarState (newOpen : float, newHigh : float, newLow : float, 
+                  newClose : float, newDirection) =
     let barStateArray =
         [| newOpen.ToString("F2")
            newHigh.ToString("F2")

@@ -34,7 +34,7 @@ open MkUniRenkoUtils
 // ========================================================
 let complete (price : float) (tickValue : float) 
     (currBarState : float * float * float * float * string) (offsetParm : int) 
-    (nbDirection : string) =
+    (nbDirection : string) (lastFlag: string) =
     let currOpen, currHigh, currLow, _currClose, direction = currBarState
     
     let offsetParmFactor = // sets direction of offsetParm based on prior bar
@@ -59,18 +59,20 @@ let complete (price : float) (tickValue : float)
     let newBar = newBarOpen, newBarHigh, newBarLow, newBarClose, newBarDirection
     (barComplete, completedBar, newBar)
 
+// no-op func for catchall case in match that calls it
 let incomplete (_price : float) (_tickValue : float) 
     (currBarState : float * float * float * float * string) 
-    (_nbDirection : string) = (false, currBarState, currBarState)
+    (_nbDirection : string) (lastFlag:string) = (false, currBarState, currBarState)
 
-let isBarComplete priceTargets price tickValue currBarState offsetParm =
+let isBarComplete priceTargets price tickValue currBarState offsetParm lastFlag =
     let _currOpen, _currHigh, _currLow, _currClose, direction = currBarState
-    match (priceTargets, price, direction) with
-    | DnTrendTarget -> complete price tickValue currBarState offsetParm "D"
-    | UpTrendTarget -> complete price tickValue currBarState offsetParm "U"
-    | DnReversalTarget -> complete price tickValue currBarState offsetParm "D"
-    | UpReversalTarget -> complete price tickValue currBarState offsetParm "U"
-    | _ -> incomplete price tickValue currBarState "_"
+    match (priceTargets, price, direction, lastFlag) with
+    | DnTrendTarget -> complete price tickValue currBarState offsetParm "D" lastFlag
+    | UpTrendTarget -> complete price tickValue currBarState offsetParm "U" lastFlag
+    | DnReversalTarget -> complete price tickValue currBarState offsetParm "D" lastFlag
+    | UpReversalTarget -> complete price tickValue currBarState offsetParm "U" lastFlag
+    | LastRow -> complete price tickValue currBarState offsetParm "U" lastFlag
+    | _ -> incomplete price tickValue currBarState "_" lastFlag
 
 let buildBars (clParams : StreamWriter * int * int * int * float) 
     (barState : string) (line : string) =
@@ -78,7 +80,7 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     // main function to build bar, write to file
     // ========================================================
     // unpack everything we need
-    let uOpen, uHigh, uLow, uClose, direction = unpackState (barState)
+    let uOpen, uHigh, uLow, uClose, direction = unpackBarState (barState)
     let outFile, trendParm, reversalParm, offsetParm, tickValue = clParams
     let theInputRow = deserializeInputRow line
     
@@ -102,15 +104,15 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
         (newOpen, newHigh, newLow, uClose, direction)
     let barIsComplete, completedBar, newBar = // have we met a trend target?
         isBarComplete priceTargets theInputRow.Price tickValue openBar 
-            offsetParm
+            offsetParm theInputRow.LastFlag
     // next line it the whole reason we are here:
     if (barIsComplete) then outFile.WriteLine(formatOutputBar completedBar)
     let barState =
         if (barIsComplete) then newBar
         else openBar
     
-    let newState = packState barState
-    // remember to check for LAST! TODO 
+    let newState = packBarState barState
+    
     newState
 
 [<EntryPoint>]
