@@ -25,22 +25,53 @@ let deserializeInputRow (line : string) =
           AggDelta = int lineArray.[7]
           LastFlag = lineArray.[8] }
     currInputRow
-    
-type OhlcRow = 
-    { pOpen: float
-      pHigh: float
-      pLow: float
-      pClose: float }
 
-let serializeUniOhlcRow (currRow : OhlcRow) =
+type OhlcRow =
+    { uOpen : float
+      uHigh : float
+      uLow : float
+      uClose : float
+      direction : string }
+
+let deserializeOhlcRow (bar : string) =
+    let barArray = bar.Split(',')
+    
+    let currOhlcRow =
+        { uOpen = float barArray.[0]
+          uHigh = float barArray.[1]
+          uLow = float barArray.[2]
+          uClose = float barArray.[3]
+          direction = barArray.[4] }
+    currOhlcRow
+
+let serializeOhlcRow (currRow : OhlcRow) =
     let lineArray =
-        [| currRow.pOpen.ToString("F2")
-           currRow.pHigh.ToString("F2")
-           currRow.pLow.ToString("F2")
-           currRow.pClose.ToString("F2") |]
+        [| currRow.uOpen.ToString("F2")
+           currRow.uHigh.ToString("F2")
+           currRow.uLow.ToString("F2")
+           currRow.uClose.ToString("F2")
+           currRow.direction.ToString() |]
     
     let currOhlcRow = String.concat "," lineArray
     currOhlcRow
+
+let serializeOhlcRowWoDirection (currRow : OhlcRow) =
+    let lineArray =
+        [| currRow.uOpen.ToString("F2")
+           currRow.uHigh.ToString("F2")
+           currRow.uLow.ToString("F2")
+           currRow.uClose.ToString("F2") |]
+    
+    let currOhlcRow = String.concat "," lineArray
+    currOhlcRow
+
+let convertOhlcRowToTuple (currRow : OhlcRow) =
+    let uOpen = currRow.uOpen
+    let uHigh = currRow.uHigh
+    let uLow = currRow.uLow
+    let uClose = currRow.uClose
+    let direction = currRow.direction
+    (uOpen, uHigh, uLow, uClose, direction)
 
 type UniRenkoRow =
     { SeqNum1 : int

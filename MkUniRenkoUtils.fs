@@ -24,6 +24,7 @@ let packBarState (newOpen : float, newHigh : float, newLow : float,
     let newState = barStateArray |> String.concat (",")
     newState
 
+
 let formatOutputBar (completedBar : float * float * float * float * string) =
     let completedBarOpen, completedBarHigh, completedBarLow, completedBarClose, 
         _completedBarDirection = completedBar
