@@ -22,12 +22,12 @@ expected output: a UniRenko bar file
 
 *)
 
-open System
+// open System
 open System.IO
 open FilterIoLib
 open MkUniRenkoTypes
 open MkUniRenkoTargets
-open MkUniRenkoUtils
+// open MkUniRenkoUtils
 
 // ========================================================
 // all bar completion functions

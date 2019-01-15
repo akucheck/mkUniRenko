@@ -1,7 +1,7 @@
 module MkUniRenkoUtils
 
 // ========================================================
-// all bar state handling, formatting functions
+// formerly useful functions
 // ========================================================
 // let unpackBarState (barState : string) =
 //     let barStateArray = barState.Split(',') // unpack current accumulator state

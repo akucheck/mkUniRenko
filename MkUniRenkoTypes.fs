@@ -65,30 +65,44 @@ let serializeOhlcRowWoDirection (currRow : OhlcRow) =
     let currOhlcRow = String.concat "," lineArray
     currOhlcRow
 
-let convertOhlcRowToTuple (currRow : OhlcRow) =
-    let uOpen = currRow.uOpen
-    let uHigh = currRow.uHigh
-    let uLow = currRow.uLow
-    let uClose = currRow.uClose
-    let direction = currRow.direction
-    (uOpen, uHigh, uLow, uClose, direction)
+type ConnectorRow =
+    { seqNum1 : int
+      role1 : int
+      seqNum2 : int
+      role2 : int
+      seqNum3 : int
+      role3 : int }
 
-type UniRenkoRow =
-    { SeqNum1 : int
-      UniRole1 : int
-      SeqNum2 : int
-      UniRole2 : int
-      SeqNum3 : int
-      UniRole3 : int }
-
-let serializeUniRenkoRow (currRow : UniRenkoRow) =
+let serializeConnectorRow (currRow : ConnectorRow) =
     let lineArray =
-        [| currRow.SeqNum1.ToString()
-           currRow.UniRole1.ToString()
-           currRow.SeqNum2.ToString()
-           currRow.UniRole2.ToString()
-           currRow.SeqNum3.ToString()
-           currRow.UniRole3.ToString() |]
+        [| currRow.seqNum1.ToString()
+           currRow.role1.ToString()
+           currRow.seqNum2.ToString()
+           currRow.role2.ToString()
+           currRow.seqNum3.ToString()
+           currRow.role3.ToString() |]
     
-    let currUniRenkoRow = String.concat "," lineArray
-    currUniRenkoRow
+    let currRow = String.concat "," lineArray
+    currRow
+
+let deserializeConnectorRow (line : string) =
+    let lineArray = line.Split(',')
+    
+    let currRow =
+        { seqNum1 = int lineArray.[0]
+          role1 = int lineArray.[1]
+          seqNum2 = int lineArray.[2]
+          role2 = int lineArray.[3]
+          seqNum3 = int lineArray.[4]
+          role3 = int lineArray.[5] }
+    currRow
+// ========================================================
+// formerly useful functions
+// ========================================================
+// let convertOhlcRowToTuple (currRow : OhlcRow) =
+//     let uOpen = currRow.uOpen
+//     let uHigh = currRow.uHigh
+//     let uLow = currRow.uLow
+//     let uClose = currRow.uClose
+//     let direction = currRow.direction
+//     (uOpen, uHigh, uLow, uClose, direction)
