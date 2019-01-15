@@ -1,5 +1,13 @@
 module MkUniRenkoTargets
-
+(*
+There are 6 possible ways a UniRenko bar can close:
+1. for 1st bar of session, only: upTrd or dnTrd target is met
+2. if currently in a downTrend, a  dnTrd target is met
+3. if currently in a upTrend,   an upTrd target is met
+4. if currently in a upTrend,   a  dnRev target is met
+5. if currently in a downTrend, an upRev target is met
+6. the session ends
+*)
 let priceTargets uOpen (tickValue : float) (trendParm : int) 
     (reversalParm : int) =
     // compute all price targets based on clParams 
@@ -12,28 +20,24 @@ let priceTargets uOpen (tickValue : float) (trendParm : int)
 // ========================================================
 // active patterns for determining whether bar is complete
 // ========================================================
+let (|DnTrdTarget|_|) (priceTargets, price, direction, lastFlag : string) =
+    let dnTrdTarget, _, _, _ = priceTargets
+    if (price = dnTrdTarget && direction <> "U") then Some()
+    else None
+
 let (|UpTrdTarget|_|) (priceTargets, price, direction, lastFlag : string) =
-    let _dnTrdTarget, upTrdTarget, _dnRevTarget, _upRevTarget =
-        priceTargets
+    let _, upTrdTarget, _, _ = priceTargets
     if (price = upTrdTarget && direction <> "D") then Some()
     else None
 
 let (|DnRevTarget|_|) (priceTargets, price, direction, lastFlag : string) =
-    let _dnTrdTarget, _upTrdTarget, dnRevTarget, _upRevTarget =
-        priceTargets
+    let _, _, dnRevTarget, _ = priceTargets
     if (price = dnRevTarget && direction = "U") then Some()
     else None
 
 let (|UpRevTarget|_|) (priceTargets, price, direction, lastFlag : string) =
-    let _dnTrdTarget, _upTrdTarget, _dnRevTarget, upRevTarget =
-        priceTargets
+    let _, _, _, upRevTarget = priceTargets
     if (price = upRevTarget && direction = "D") then Some()
-    else None
-
-let (|DnTrdTarget|_|) (priceTargets, price, direction, lastFlag : string) =
-    let dnTrdTarget, _upTrdTarget, _dnRevTarget, _upRevTarget =
-        priceTargets
-    if (price = dnTrdTarget && direction <> "U") then Some()
     else None
 
 let (|LastRow|_|) (_priceTargets, _price, _direction, lastFlag : string) =
