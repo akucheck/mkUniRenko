@@ -1,5 +1,11 @@
 module MkUniRenkoUtils
 
+let splitStringAtVerticalBar (line : string) =
+    let firstPart = line.Substring(0, line.IndexOf("|"))
+    let secondPart =
+        line.Substring( 1 + line.IndexOf("|"), -1 + line.Length  - line.IndexOf("|"))
+    (firstPart, secondPart)
+
 // ========================================================
 // formerly useful functions
 // ========================================================

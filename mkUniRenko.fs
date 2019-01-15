@@ -27,7 +27,7 @@ open System.IO
 open FilterIoLib
 open MkUniRenkoTypes
 open MkUniRenkoTargets
-// open MkUniRenkoUtils
+open MkUniRenkoUtils
 
 // ========================================================
 // all bar completion functions
@@ -88,7 +88,8 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     (barState : string) (line : string) =
     // unpack everything we need
     let outFile, trendParm, reversalParm, openParm, tickVal = clParams
-    let theBar = deserializeOhlcRow barState
+    let barInfo, connectorInfo = splitStringAtVerticalBar barState
+    let theBar = deserializeOhlcRow barInfo
     let theInputRow = deserializeInputRow line
     let priceTargets = // establish price targets for bar close
         priceTargets theBar.uOpen tickVal trendParm reversalParm
@@ -124,7 +125,7 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
         if (barIsComplete) then newBar // create new bar, then rinse, repeat
         else openBar // keep going
     
-    let newState = serializeOhlcRow barState
+    let newState = (serializeOhlcRow barState) + "|" + connectorInfo
     newState
 
 [<EntryPoint>]
@@ -136,10 +137,9 @@ let _main argv =
     let barFile = argv.[4]
     use outFile = new StreamWriter(barFile)
     let clParams = (outFile, trendParm, reversalParm, openParm, tickVal)
-    // uOpen,        uHigh,        uLow,        uClose,      direction, 
-    // TODO: extend init state for seqNums
-    // seqNum.uOpen, seqNum.uHigh, seqNum.uLow, seqNum.uClose
-    let initState = "0.00,0.00,0.00,0.00,X" //,sO,sH,sL,sC" 
+    // init state: uOpen, uHigh,uLow,uClose,direction, 
+    // seqNum1, role1, seqNum2, role2, seqNum3, role3
+    let initState = "0.00,0.00,0.00,0.00,X|s1,r1,s2,r2,s3,r3" 
     
     let _lines =
         Seq.initInfinite readInput
