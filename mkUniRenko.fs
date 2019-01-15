@@ -69,11 +69,10 @@ let complete (price : float) (tickVal : float) (openBar : OhlcRow)
 
 // no-op func for catchall case in match that calls it
 let incomplete (_price : float) (_tickVal : float) (openBar : OhlcRow) 
-    (direction : string) (lastFlag : string) = (false, openBar, openBar)
+    (_direction : string) (_lastFlag : string) = (false, openBar, openBar)
 
 let isBarComplete priceTargets price tickVal openBar openParm lastFlag =
-    let direction = openBar.direction
-    match (priceTargets, price, direction, lastFlag) with
+    match (priceTargets, price, openBar.direction, lastFlag) with
     | DnTrdTarget -> complete price tickVal openBar openParm "D" lastFlag
     | UpTrdTarget -> complete price tickVal openBar openParm "U" lastFlag
     | DnRevTarget -> complete price tickVal openBar openParm "D" lastFlag
@@ -90,6 +89,7 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     let outFile, trendParm, reversalParm, openParm, tickVal = clParams
     let barInfo, connectorInfo = splitStringAtVerticalBar barState
     let theBar = deserializeOhlcRow barInfo
+    // TODO: start using connectorInfo
     let theInputRow = deserializeInputRow line
     let priceTargets = // establish price targets for bar close
         priceTargets theBar.uOpen tickVal trendParm reversalParm
@@ -118,9 +118,9 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     let barIsComplete, completedBarOhlc, newBar = // have we met a target?
         isBarComplete priceTargets theInputRow.Price tickVal openBar openParm 
             theInputRow.LastFlag
-    // next line is the whole reason we are here:
     if (barIsComplete) then 
-        outFile.WriteLine(serializeOhlcRowWoDirection completedBarOhlc)
+        outFile.WriteLine // this line is the whole reason we are here
+                          (serializeOhlcRowWoDirection completedBarOhlc)
     let barState =
         if (barIsComplete) then newBar // create new bar, then rinse, repeat
         else openBar // keep going
@@ -139,7 +139,9 @@ let _main argv =
     let clParams = (outFile, trendParm, reversalParm, openParm, tickVal)
     // init state: uOpen, uHigh,uLow,uClose,direction, 
     // seqNum1, role1, seqNum2, role2, seqNum3, role3
-    let initState = "0.00,0.00,0.00,0.00,X|s1,r1,s2,r2,s3,r3" 
+    let initBarState = "0.00,0.00,0.00,0.00,X"
+    let initConnectorState = "s1,r1,s2,r2,s3,r3"
+    let initState = initBarState + "|" + initConnectorState
     
     let _lines =
         Seq.initInfinite readInput
