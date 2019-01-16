@@ -2,7 +2,7 @@ module MkUniRenkoTypes
 
 type InputRow =
     { DateTime : string
-      SeqNum : int
+      SeqNum : string
       Price : float
       Volume : int
       DeltaFactor : int
@@ -16,7 +16,7 @@ let deserializeInputRow (line : string) =
     
     let currInputRow =
         { DateTime = lineArray.[0]
-          SeqNum = int lineArray.[1]
+          SeqNum = string lineArray.[1]
           Price = float lineArray.[2]
           Volume = int lineArray.[3]
           DeltaFactor = int lineArray.[4]
@@ -31,7 +31,12 @@ type OhlcRow =
       uHigh : float
       uLow : float
       uClose : float
-      direction : string }
+      direction : string
+      priorClose : float
+      seqNum1 : string
+      seqNum2 : string
+      seqNum3 : string
+      seqNum4 : string }
 
 let deserializeOhlcRow (bar : string) =
     let barArray = bar.Split(',')
@@ -41,7 +46,12 @@ let deserializeOhlcRow (bar : string) =
           uHigh = float barArray.[1]
           uLow = float barArray.[2]
           uClose = float barArray.[3]
-          direction = barArray.[4] }
+          direction = barArray.[4]
+          priorClose = float barArray.[5]
+          seqNum1 = barArray.[6]
+          seqNum2 = barArray.[7]
+          seqNum3 = barArray.[8]
+          seqNum4 = barArray.[9] }
     currOhlcRow
 
 let serializeOhlcRow (currRow : OhlcRow) =
@@ -50,7 +60,12 @@ let serializeOhlcRow (currRow : OhlcRow) =
            currRow.uHigh.ToString("F2")
            currRow.uLow.ToString("F2")
            currRow.uClose.ToString("F2")
-           currRow.direction.ToString() |]
+           currRow.direction
+           currRow.priorClose.ToString("F2")
+           currRow.seqNum1
+           currRow.seqNum2
+           currRow.seqNum3
+           currRow.seqNum4 |]
     
     let currOhlcRow = String.concat "," lineArray
     currOhlcRow
@@ -60,42 +75,14 @@ let serializeOhlcRowWoDirection (currRow : OhlcRow) =
         [| currRow.uOpen.ToString("F2")
            currRow.uHigh.ToString("F2")
            currRow.uLow.ToString("F2")
-           currRow.uClose.ToString("F2") |]
+           currRow.uClose.ToString("F2")
+           currRow.seqNum1
+           currRow.seqNum2
+           currRow.seqNum3
+           currRow.seqNum4 |]
     
     let currOhlcRow = String.concat "," lineArray
     currOhlcRow
-
-type ConnectorRow =
-    { seqNum1 : int
-      role1 : int
-      seqNum2 : int
-      role2 : int
-      seqNum3 : int
-      role3 : int }
-
-let serializeConnectorRow (currRow : ConnectorRow) =
-    let lineArray =
-        [| currRow.seqNum1.ToString()
-           currRow.role1.ToString()
-           currRow.seqNum2.ToString()
-           currRow.role2.ToString()
-           currRow.seqNum3.ToString()
-           currRow.role3.ToString() |]
-    
-    let currRow = String.concat "," lineArray
-    currRow
-
-let deserializeConnectorRow (line : string) =
-    let lineArray = line.Split(',')
-    
-    let currRow =
-        { seqNum1 = int lineArray.[0]
-          role1 = int lineArray.[1]
-          seqNum2 = int lineArray.[2]
-          role2 = int lineArray.[3]
-          seqNum3 = int lineArray.[4]
-          role3 = int lineArray.[5] }
-    currRow
 // ========================================================
 // formerly useful functions
 // ========================================================
