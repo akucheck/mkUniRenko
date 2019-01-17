@@ -29,6 +29,8 @@ open MkUniRenkoTypes
 open MkUniRenkoTargets
 open MkUniRenkoUtils
 
+let impossiblyHighValue = 100000.00 // a value we know will be above the range
+
 // ========================================================
 // all bar completion functions
 // ========================================================
@@ -63,7 +65,7 @@ let complete (price : float) (seqNum : string) (tickVal : float)
     
     let newBarOpen = 0.00 //latest changes
     let newBarHigh = 0.00
-    let newBarLow = 0.00
+    let newBarLow = impossiblyHighValue
     let newBarClose = 0.00
     let newBarDirection = nbDirection // based on whether up/dn target hit
     
@@ -84,14 +86,18 @@ let complete (price : float) (seqNum : string) (tickVal : float)
 let incomplete (_price : float) (_tickVal : float) (openBar : OhlcRow) 
     (_direction : string) (_lastFlag : string) = (false, openBar, openBar)
 
-let isBarComplete priceTargets price seqNum tickVal openBar openParm lastFlag =
-    match (priceTargets, price, seqNum, openBar.direction, lastFlag) with
-    | DnTrdTarget -> complete price seqNum tickVal openBar openParm "D" lastFlag
-    | UpTrdTarget -> complete price seqNum tickVal openBar openParm "U" lastFlag
-    | DnRevTarget -> complete price seqNum tickVal openBar openParm "D" lastFlag
-    | UpRevTarget -> complete price seqNum tickVal openBar openParm "U" lastFlag
-    | LastRow -> complete price seqNum tickVal openBar openParm "L" lastFlag
-    | _ -> incomplete price tickVal openBar "_" lastFlag
+let isBarComplete priceTargets theInputRow tickVal currBar openParm =
+    let price = theInputRow.Price
+    let seqNum = theInputRow.SeqNum
+    let lastFlag = theInputRow.LastFlag
+    let direction = currBar.direction
+    match (priceTargets, price, seqNum, direction, lastFlag) with
+    | DnTrdTarget -> complete price seqNum tickVal currBar openParm "D" lastFlag
+    | UpTrdTarget -> complete price seqNum tickVal currBar openParm "U" lastFlag
+    | DnRevTarget -> complete price seqNum tickVal currBar openParm "D" lastFlag
+    | UpRevTarget -> complete price seqNum tickVal currBar openParm "U" lastFlag
+    | LastRow -> complete price seqNum tickVal currBar openParm "L" lastFlag
+    | _ -> incomplete price tickVal currBar "_" lastFlag
 
 // active patterns for use below
 let (|PriceGtHigh|_|) (price, high) =
@@ -101,58 +107,48 @@ let (|PriceGtHigh|_|) (price, high) =
 let (|PriceLtLow|_|) (price, low) =
     if (price < low) then Some()
     else None
+
+let checkForLowerLow theInputRow theBar =
+    match (theInputRow.Price, theBar.uLow) with
+    | PriceLtLow -> (theInputRow.Price, theInputRow.SeqNum)
+    | _ -> (theBar.uLow, theBar.seqNum3)
+
+let checkForHigherHigh theInputRow theBar =
+    match (theInputRow.Price, theBar.uHigh) with
+    | PriceGtHigh -> (theInputRow.Price, theInputRow.SeqNum)
+    | _ -> (theBar.uHigh, theBar.seqNum2)
+
+let setOpenIfNec theInputRow theBar =
+    match (theBar.uOpen) with
+    | 0.00 -> (theInputRow.Price, theInputRow.SeqNum)
+    | _ -> (theBar.uOpen, theBar.seqNum1)
+
+let setPriorClose theBar =
+    match (theBar.priorClose) with
+    | 0.00 -> theBar.uOpen
+    | _ -> theBar.priorClose
+
 // ========================================================
 // main function to build bar, write to output file
 // ========================================================
 let buildBars (clParams : StreamWriter * int * int * int * float) 
     (barState : string) (line : string) =
     // unpack everything we need
-    let outFile, trendParm, reversalParm, openParm, tickVal = clParams
+    let outFile, trdParm, revParm, openParm, tickVal = clParams
     let theBar = deserializeOhlcRow barState
     let theInputRow = deserializeInputRow line
+    // set values for bar from input data
+    let priorClose = setPriorClose theBar
+    let priceTargets = createPriceTargs priorClose tickVal trdParm revParm
+    let nOpen, nSeqNum1 = setOpenIfNec theInputRow theBar
+    let nHigh, nSeqNum2 = checkForHigherHigh theInputRow theBar
+    let nLow, nSeqNum3 = checkForLowerLow theInputRow theBar
     
-    let priorClose = // needed for priceTarget calc 
-        match (theBar.priorClose) with
-        | 0.00 -> theBar.uOpen
-        | _ -> theBar.priorClose
-    
-    let priceTargets = // establish price targets for bar close
-        priceTargets priorClose tickVal trendParm reversalParm
-
-    // now record Open, Low, check for higherHigh, lowerLow
-    // and assemble bar
-    //
-    let nOpen, nSeqNum1 = 
-        match (theBar.uOpen) with
-        | 0.00 -> (theInputRow.Price, theInputRow.SeqNum)
-        | _ -> (theBar.uOpen, theBar.seqNum1)
-
-    // set low to ridiculously high value to make sure we get a new low
-    let newLow = 
-        match (theBar.uLow) with
-        | 0.00 -> 100000.00
-        | _ -> theBar.uLow
- 
-    // check for HH
-    let nHigh, nSeqNum2 =
-        match (theInputRow.Price, theBar.uHigh) with
-        | PriceGtHigh -> (theInputRow.Price, theInputRow.SeqNum)
-        | _ -> (theBar.uHigh, theBar.seqNum2)
-    
-    // check for LL
-    let nLow, nSeqNum3 =
-        match (theInputRow.Price, newLow) with
-        | PriceLtLow -> (theInputRow.Price, theInputRow.SeqNum)
-        | _ -> (theBar.uLow, theBar.seqNum3)
-    
-    let openBar =
+    let currBar = // assemble the current bar so we can check if complete yet
         { uOpen = nOpen
           uHigh = nHigh
           uLow = nLow
           uClose = theBar.uClose
-          // Until the first bar is complete, direction is unknown: "X".
-          // After that, direction will always be "U" or "D"
-          // until last row of data, then "L"
           direction = theBar.direction
           priorClose = theBar.priorClose
           seqNum1 = nSeqNum1
@@ -160,34 +156,32 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
           seqNum3 = nSeqNum3
           seqNum4 = "unassigned" }
     
-    // have we met a target?
-    let barIsComplete, completedBarOhlc, newBar = 
-        isBarComplete priceTargets theInputRow.Price theInputRow.SeqNum tickVal 
-            openBar openParm theInputRow.LastFlag
-    // if we have met target we will need a bar...
-    let barToBeWritten = (serializeOhlcRowWoDirection completedBarOhlc)
-    // next line is the whole reason we are here
+    
+    let barIsComplete, completedBarOhlc, newBar = // have we met a target?
+        isBarComplete priceTargets theInputRow tickVal currBar openParm
+    let barToBeWritten = (serializeShortOhlcRow completedBarOhlc)
     if (barIsComplete) then outFile.WriteLine barToBeWritten
-    let barState = // create accumulator state on to next row of data
+    let barState = // update accumulator state for next row of data
         match (barIsComplete) with
         | true -> newBar // create new bar, then rinse, repeat
-        | _ -> openBar // keep going
+        | _ -> currBar // keep going
     
     let newState = (serializeOhlcRow barState) + "1,2,3,4,5,6"
     newState
 
 [<EntryPoint>]
 let _main argv =
-    let trendParm = int argv.[0]
-    let reversalParm = int argv.[1]
+    let trdParm = int argv.[0]
+    let revParm = int argv.[1]
     let openParm = int argv.[2]
     let tickVal = float argv.[3]
     let barFile = argv.[4]
     use outFile = new StreamWriter(barFile)
-    let clParams = (outFile, trendParm, reversalParm, openParm, tickVal)
+    let clParams = (outFile, trdParm, revParm, openParm, tickVal)
     // init state: uOpen, uHigh,uLow,uClose,direction, priorClose
     // seqNum1, role1, seqNum2, role2, seqNum3, role3
-    let initBarState = "0.00,0.00,0.00,0.00,X,0.00"
+    let impossiblyHighValueForLow = impossiblyHighValue.ToString("F2")
+    let initBarState = "0.00,0.00," + impossiblyHighValueForLow + ",0.00,X,0.00"
     let initConnectorState = "1,2,3,4,5,6"
     let initState = initBarState + "," + initConnectorState
     

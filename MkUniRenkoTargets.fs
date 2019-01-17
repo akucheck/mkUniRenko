@@ -9,13 +9,13 @@ There are 6 possible ways a UniRenko bar can close:
 5. if currently in a downTrend, an upRev target is met
 6. the session ends
 *)
-let priceTargets priorClose (tickValue : float) (trendParm : int) 
-    (reversalParm : int) =
+let createPriceTargs priorClose (tickValue : float) (trdParm : int) 
+    (revParm : int) =
     // compute all price targets based on clParams 
-    let dnTrdTarget = priorClose - (tickValue * float trendParm)
-    let upTrdTarget = priorClose + (tickValue * float trendParm)
-    let dnRevTarget = priorClose - (tickValue * float reversalParm)
-    let upRevTarget = priorClose + (tickValue * float reversalParm)
+    let dnTrdTarget = priorClose - (tickValue * float trdParm)
+    let upTrdTarget = priorClose + (tickValue * float trdParm)
+    let dnRevTarget = priorClose - (tickValue * float revParm)
+    let upRevTarget = priorClose + (tickValue * float revParm)
     (dnTrdTarget, upTrdTarget, dnRevTarget, upRevTarget)
 
 // ========================================================

@@ -70,7 +70,7 @@ let serializeOhlcRow (currRow : OhlcRow) =
     let currOhlcRow = String.concat "," lineArray
     currOhlcRow
 
-let serializeOhlcRowWoDirection (currRow : OhlcRow) =
+let serializeShortOhlcRow (currRow : OhlcRow) =
     let lineArray =
         [| currRow.uOpen.ToString("F2")
            currRow.uHigh.ToString("F2")
