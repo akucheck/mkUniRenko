@@ -15,21 +15,21 @@ Expected input: the standard "shrink" format that contains one row for each
 price change during the course of a session.  That data has been run through 
 through the markLast to append a LastFlag:
 
-dateTime, seqNum, volume, deltaFactor, occur, aggVol, aggDelta, LastFlag
-2018-12-27T15:00:00,41,2491.50,1,-1,41,205,-5,X
-2018-12-27T15:00:00,43,2491.25,1,-1,2,3,-2,X
-2018-12-27T15:00:00,44,2491.00,1,-1,1,2,-1,X
-2018-12-27T15:00:00,45,2491.25,1,1,1,2,1,X
-2018-12-27T15:00:00,47,2491.50,1,1,2,3,0,X
+- dateTime, seqNum, volume, deltaFactor, occur, aggVol, aggDelta, LastFlag
+- 2018-12-27T15:00:00,41,2491.50,1,-1,41,205,-5,X
+- 2018-12-27T15:00:00,43,2491.25,1,-1,2,3,-2,X
+- 2018-12-27T15:00:00,44,2491.00,1,-1,1,2,-1,X
+- 2018-12-27T15:00:00,45,2491.25,1,1,1,2,1,X
+- 2018-12-27T15:00:00,47,2491.50,1,1,2,3,0,X
 
 Expected output: a UniRenko bar file
 
-// uOpen, uHigh, uLow, uClose, seqNum1, seqNum2, seqNum3
-2487.75,2492.00,2487.50,2487.50,41,110,916,916
-2483.75,2488.00,2483.50,2483.50,925,1424,3114,3114
-2479.75,2484.50,2479.50,2479.50,3120,3275,6368,6368
-2499.75,2499.50,2477.75,2499.50,6375,56563,8894,56563
-2503.25,2503.50,2499.25,2503.50,56582,56940,56582,56940
+- uOpen, uHigh, uLow, uClose, seqNum1, seqNum2, seqNum3
+- 2487.75,2492.00,2487.50,2487.50,41,110,916,916
+- 2483.75,2488.00,2483.50,2483.50,925,1424,3114,3114
+- 2479.75,2484.50,2479.50,2479.50,3120,3275,6368,6368
+- 2499.75,2499.50,2477.75,2499.50,6375,56563,8894,56563
+- 2503.25,2503.50,2499.25,2503.50,56582,56940,56582,56940
 
 The seqNums above are the original tick sequence numbers for the given trades.
 
