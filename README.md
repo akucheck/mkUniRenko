@@ -97,7 +97,7 @@ line numbers for this discussion. They do not exist in the sourceData.
 
 The day starts with:
 
-1. 2018-12-27T15:00:00,41,2491.50,1,-1,41,205,-5
+- 2018-12-27T15:00:00,41,2491.50,1,-1,41,205,-5
 
 By definition, this is the uOpen of the 1st bar of the day. We note it as such.
 
@@ -109,7 +109,8 @@ Next, we must compute target values, based on the Trend parameter
 (since the 1st bar of a session can never be a Reversal bar, it must be a 
 Trend bar): 
 
-- price +/- Trend paremeters = target value
+price +/- Trend paremeters = target value
+
 - 2491.50 + 16 ticks = 2495.50 (upTrend)
 - 2491.50 - 16 ticks = 2487.50 (dnTrend)
 
@@ -126,13 +127,10 @@ we will track new highs/lows:
 - .
 - .
 - .
-- .
-- .
 - 2018-12-27T15:00:10,173,2490.75,1,-1,1,2,-1 // new pot low
-.
-.
-.
-
+- .
+- .
+- .
 until, at row 217, we hit one of our targets:
 
 - 2018-12-27T15:02:22,916,2487.50,3,-1,4,10,-7 // low target hit!
