@@ -7,7 +7,7 @@ There are 6 possible ways a UniRenko bar can close:
 3. if currently in a upTrend,   an upTrd target is met
 4. if currently in a upTrend,   a  dnRev target is met
 5. if currently in a downTrend, an upRev target is met
-6. the session ends
+6. the session ends 
 *)
 let createPriceTargs priorClose (tickValue : float) (trdParm : int) 
     (revParm : int) =

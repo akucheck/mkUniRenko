@@ -1,10 +1,19 @@
-﻿// mkUniRenko
-// usage: 
+﻿// mkUniRenko.fs
 (*
+UniRenko bars are specfied by the the following parameters:
+   Trend: number of ticks defining a trend target
+Reversal: number of ticks defining a reversal target
+  Offset: number of ticks for synthetic open
 
-expected input:
-a standard "shrink" format that has been run through markLast to append
-a LastFlag
+In addtion to the UniRenko parameters, the tickValue is passed as a 
+command line parameter.  
+
+usage: cat inFile | mkUniRenko 16 80 1 .25 outFile > output.txt
+
+Expected input: the standard "shrink" format that contains one row for each
+price change during the course of a session.  That data has been run through 
+through the markLast to append a LastFlag:
+
 dateTime, seqNum, volume, deltaFactor, occur, aggVol, aggDelta, LastFlag
 2018-12-27T15:00:00,41,2491.50,1,-1,41,205,-5,X
 2018-12-27T15:00:00,43,2491.25,1,-1,2,3,-2,X
@@ -12,14 +21,16 @@ dateTime, seqNum, volume, deltaFactor, occur, aggVol, aggDelta, LastFlag
 2018-12-27T15:00:00,45,2491.25,1,1,1,2,1,X
 2018-12-27T15:00:00,47,2491.50,1,1,2,3,0,X
 
-expected output: a UniRenko bar file
-// seqNum1, barRole1, seqNum2, barRole2, seqNum3, barRole3
-41,8,110,4,916,3
-.
-.
-.
-.
+Expected output: a UniRenko bar file
+// uOpen, uHigh, uLow, uClose, seqNum1, seqNum2, seqNum3
+2487.75,2492.00,2487.50,2487.50,41,110,916,916
+2483.75,2488.00,2483.50,2483.50,925,1424,3114,3114
+2479.75,2484.50,2479.50,2479.50,3120,3275,6368,6368
+2499.75,2499.50,2477.75,2499.50,6375,56563,8894,56563
+2503.25,2503.50,2499.25,2503.50,56582,56940,56582,56940
 
+The seqNums above are the original tick sequence numbers for the given trades
+that 
 *)
 
 // open System
@@ -32,7 +43,7 @@ open MkUniRenkoUtils
 let impossiblyHighValue = 100000.00 // a value we know will be above the range
 
 // ========================================================
-// all bar completion functions
+// All bar completion functions
 // ========================================================
 let complete (price : float) (seqNum : string) (tickVal : float) 
     (openBar : OhlcRow) (openParm : int) (nbDirection : string) 
@@ -43,7 +54,13 @@ let complete (price : float) (seqNum : string) (tickVal : float)
         | _ -> 1
     
     let barComplete = true
-    //
+    (*
+    We attempt to mimic Ninjatrader 7 calc of the *synthetic* uOpen,
+    however NT7 handles this inconsistently. The calc
+    below keeps us +/- 2 ticks (mostly +/- 1 tick) of NT7 value at all times 
+    and we do not rely on uOpen for anything we do - its primary purpose is 
+    for visualization. Values for uHigh/uLow/uClose are unaffected.
+    *)
     let completedBarOpen =
         openBar.uOpen + (tickVal * float openParm * float openParmFactor)
     let completedBarHigh = openBar.uHigh
@@ -63,7 +80,7 @@ let complete (price : float) (seqNum : string) (tickVal : float)
           seqNum3 = openBar.seqNum3
           seqNum4 = seqNum }
     
-    let newBarOpen = 0.00 //latest changes
+    let newBarOpen = 0.00 
     let newBarHigh = 0.00
     let newBarLow = impossiblyHighValue
     let newBarClose = 0.00
@@ -99,7 +116,7 @@ let isBarComplete priceTargets theInputRow tickVal currBar openParm =
     | LastRow -> complete price seqNum tickVal currBar openParm "L" lastFlag
     | _ -> incomplete price tickVal currBar "_" lastFlag
 
-// active patterns for use below
+// active patterns and match functions for use below
 let (|PriceGtHigh|_|) (price, high) =
     if (price > high) then Some()
     else None
@@ -144,7 +161,7 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     let nHigh, nSeqNum2 = checkForHigherHigh theInputRow theBar
     let nLow, nSeqNum3 = checkForLowerLow theInputRow theBar
     
-    let currBar = // assemble the current bar so we can check if complete yet
+    let currBar = //  assemble bar
         { uOpen = nOpen
           uHigh = nHigh
           uLow = nLow
@@ -155,7 +172,6 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
           seqNum2 = nSeqNum2
           seqNum3 = nSeqNum3
           seqNum4 = "unassigned" }
-    
     
     let barIsComplete, completedBarOhlc, newBar = // have we met a target?
         isBarComplete priceTargets theInputRow tickVal currBar openParm

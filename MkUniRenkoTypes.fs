@@ -83,13 +83,4 @@ let serializeShortOhlcRow (currRow : OhlcRow) =
     
     let currOhlcRow = String.concat "," lineArray
     currOhlcRow
-// ========================================================
-// formerly useful functions
-// ========================================================
-// let convertOhlcRowToTuple (currRow : OhlcRow) =
-//     let uOpen = currRow.uOpen
-//     let uHigh = currRow.uHigh
-//     let uLow = currRow.uLow
-//     let uClose = currRow.uClose
-//     let direction = currRow.direction
-//     (uOpen, uHigh, uLow, uClose, direction)
+

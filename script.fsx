@@ -19,9 +19,7 @@ let bar = 2
 let baz = 3
 let bum = 4
 
-// let val1, val2 =
-//         if (foo = 0) then (bar, baz)
-//         else (baz, bum)
+
 
 let (val1, val2) = 
     match (foo) with 
