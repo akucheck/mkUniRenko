@@ -102,36 +102,53 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     let theBar = deserializeOhlcRow barState
     let theInputRow = deserializeInputRow line
     
-    // printfn "%f %s" theBar.uOpen theBar.seqNum1
-    // handles Open assignments for 1st row of data
+    (*
+        let (val1, val2) = 
+                match (foo) with 
+                | 0 -> (bar, baz)
+                | _ -> (baz, bum)
+    *)
+
     let nOpen, nSeqNum1 =
-        if (theBar.uOpen = 0.00) then (theInputRow.Price, theInputRow.SeqNum)
-        else (theBar.uOpen, theBar.seqNum1)
+        match (theBar.uOpen) with
+        | 0.00 -> (theInputRow.Price, theInputRow.SeqNum)
+        | _ -> (theBar.uOpen, theBar.seqNum1)
     
     let priorClose =
-        if (theBar.priorClose = 0.00) then theBar.uOpen
-        else theBar.priorClose
+        match (theBar.priorClose) with
+        | 0.00 -> theBar.uOpen
+        | _ -> theBar.priorClose
     
     let priceTargets = // establish price targets for bar close
         priceTargets priorClose tickVal trendParm reversalParm
     
     // set low to ridiculously high value to make sure we get a new low
-    let newLow, _ =
-        if (theBar.uLow = 0.00) then (100000.00, "unassigned")
-        else (theBar.uLow, theBar.seqNum3)
-    
+    let newLow =
+        match (theBar.uLow) with
+        | 0.00 -> 100000.00
+        | _ -> theBar.uLow
+
+    // active patterns for use below
+    let (|PriceGtHigh|_|) (price, high) =
+        if (price > high) then Some()
+        else None
+
+    let (|PriceLtLow|_|) (price, low) =
+        if (price < low) then Some()
+        else None
+
     // check for higher high
     let nHigh, nSeqNum2 =
-        if (theInputRow.Price > theBar.uHigh) then 
-            (theInputRow.Price, theInputRow.SeqNum)
-        else (theBar.uHigh, theBar.seqNum2)
-    
+        match (theInputRow.Price,theBar.uHigh) with
+        | PriceGtHigh -> (theInputRow.Price, theInputRow.SeqNum)
+        | _ -> (theBar.uHigh, theBar.seqNum2)
+
     // check for lower low
     let nLow, nSeqNum3 =
-        if (theInputRow.Price < newLow) then 
-            (theInputRow.Price, theInputRow.SeqNum)
-        else (theBar.uLow, theBar.seqNum3)
-    
+        match (theInputRow.Price, newLow) with 
+        | PriceLtLow -> (theInputRow.Price, theInputRow.SeqNum)
+        | _ -> (theBar.uLow, theBar.seqNum3)
+        
     let openBar =
         { uOpen = nOpen
           uHigh = nHigh
@@ -156,7 +173,7 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     let barState =
         if (barIsComplete) then newBar // create new bar, then rinse, repeat
         else openBar // keep going
-    
+    printfn "barState: %s" (serializeOhlcRow barState)
     let newState = (serializeOhlcRow barState) + "1,2,3,4,5,6"
     newState
 
