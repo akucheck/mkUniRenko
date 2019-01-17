@@ -36,8 +36,9 @@ let complete (price : float) (seqNum : string) (tickVal : float)
     (openBar : OhlcRow) (openParm : int) (nbDirection : string) 
     (_lastFlag : string) =
     let openParmFactor = // sets direction of openParm based on prior bar
-        if openBar.direction = "U" then -1
-        else 1
+        match (openBar.direction) with
+        | "U" -> -1
+        | _ -> 1
     
     let barComplete = true
     //
@@ -127,28 +128,28 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
         match (theBar.uLow) with
         | 0.00 -> 100000.00
         | _ -> theBar.uLow
-
+    
     // active patterns for use below
     let (|PriceGtHigh|_|) (price, high) =
         if (price > high) then Some()
         else None
-
+    
     let (|PriceLtLow|_|) (price, low) =
         if (price < low) then Some()
         else None
-
+    
     // check for higher high
     let nHigh, nSeqNum2 =
-        match (theInputRow.Price,theBar.uHigh) with
+        match (theInputRow.Price, theBar.uHigh) with
         | PriceGtHigh -> (theInputRow.Price, theInputRow.SeqNum)
         | _ -> (theBar.uHigh, theBar.seqNum2)
-
+    
     // check for lower low
     let nLow, nSeqNum3 =
-        match (theInputRow.Price, newLow) with 
+        match (theInputRow.Price, newLow) with
         | PriceLtLow -> (theInputRow.Price, theInputRow.SeqNum)
         | _ -> (theBar.uLow, theBar.seqNum3)
-        
+    
     let openBar =
         { uOpen = nOpen
           uHigh = nHigh
@@ -167,13 +168,14 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     let barIsComplete, completedBarOhlc, newBar = // have we met a target?
         isBarComplete priceTargets theInputRow.Price theInputRow.SeqNum tickVal 
             openBar openParm theInputRow.LastFlag
-    if (barIsComplete) then 
-        outFile.WriteLine // this line is the whole reason we are here
-                          (serializeOhlcRowWoDirection completedBarOhlc)
+    let barToBeWritten = (serializeOhlcRowWoDirection completedBarOhlc)
+    // next line is the whole reason we are here
+    if (barIsComplete) then outFile.WriteLine barToBeWritten
     let barState =
-        if (barIsComplete) then newBar // create new bar, then rinse, repeat
-        else openBar // keep going
-    printfn "barState: %s" (serializeOhlcRow barState)
+        match (barIsComplete) with
+        | true -> newBar // create new bar, then rinse, repeat
+        | _ -> openBar // keep going
+    
     let newState = (serializeOhlcRow barState) + "1,2,3,4,5,6"
     newState
 
