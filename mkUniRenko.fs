@@ -45,24 +45,44 @@ let impossiblyHighValue = 100000.00 // a value we know will be above the range
 // ========================================================
 // All bar completion functions
 // ========================================================
+let (|PriorBarDnCurrBarDn|_|) (priorBarDir, currBarDir) =
+    if (priorBarDir = "D" && currBarDir = "D") then Some()
+    else None
+
+let (|PriorBarDnCurrBarUp|_|) (priorBarDir, currBarDir) =
+    if (priorBarDir = "D" && currBarDir = "U") then Some()
+    else None
+
+let (|PriorBarUpCurrBarUp|_|) (priorBarDir, currBarDir) =
+    if (priorBarDir = "U" && currBarDir = "U") then Some()
+    else None
+
+let (|PriorBarUpCurrBarDn|_|) (priorBarDir, currBarDir) =
+    if (priorBarDir = "U" && currBarDir = "D") then Some()
+    else None
+
 let complete (price : float) (seqNum : string) (tickVal : float) 
     (openBar : OhlcRow) (openParm : int) (nbDirection : string) 
     (_lastFlag : string) =
+    let priorBarDir = openBar.direction
+    let currBardir = nbDirection
+    
     let openParmFactor = // sets direction of openParm based on prior bar
-        match (openBar.direction) with
-        | "U" -> -1
+        match (priorBarDir, currBardir) with
+        | PriorBarDnCurrBarUp -> 1
+        | PriorBarUpCurrBarUp -> -1
+        | PriorBarUpCurrBarDn -> -1
         | _ -> 1
     
     let barComplete = true
-    (*
-    We attempt to mimic Ninjatrader 7 calc of the *synthetic* uOpen,
-    however NT7 handles this inconsistently. The calc
-    below keeps us +/- 2 ticks (mostly +/- 1 tick) of NT7 value at all times 
-    and we do not rely on uOpen for anything we do - its primary purpose is 
-    for visualization. Values for uHigh/uLow/uClose are unaffected.
-    *)
+    
     let completedBarOpen =
-        openBar.uOpen + (tickVal * float openParm * float openParmFactor)
+        match (openBar.priorClose) with
+        | 0.00 -> openBar.uOpen // handle first bar of session
+        | _ -> 
+            openBar.priorClose 
+            + (tickVal * float openParm * float openParmFactor)
+    
     let completedBarHigh = openBar.uHigh
     let completedBarLow = openBar.uLow
     let completedBarClose = price
@@ -80,7 +100,7 @@ let complete (price : float) (seqNum : string) (tickVal : float)
           seqNum3 = openBar.seqNum3
           seqNum4 = seqNum }
     
-    let newBarOpen = 0.00 
+    let newBarOpen = 0.00
     let newBarHigh = 0.00
     let newBarLow = impossiblyHighValue
     let newBarClose = 0.00
