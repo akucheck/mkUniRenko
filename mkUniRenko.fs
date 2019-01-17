@@ -22,7 +22,7 @@ dateTime, seqNum, volume, deltaFactor, occur, aggVol, aggDelta, LastFlag
 2018-12-27T15:00:00,47,2491.50,1,1,2,3,0,X
 
 Expected output: a UniRenko bar file
-// uOpen, uHigh, uLow, uClose, seqNum1, seqNum2, seqNum3
+// uOpen, uHigh, uLow, uClose, seqNum1, seqNum2, seqNum3, seqNum4
 2487.75,2492.00,2487.50,2487.50,41,110,916,916
 2483.75,2488.00,2483.50,2483.50,925,1424,3114,3114
 2479.75,2484.50,2479.50,2479.50,3120,3275,6368,6368

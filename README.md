@@ -24,7 +24,7 @@ through the markLast to append a LastFlag:
 
 Expected output: a UniRenko bar file
 
-- uOpen, uHigh, uLow, uClose, seqNum1, seqNum2, seqNum3
+- uOpen, uHigh, uLow, uClose, seqNum1, seqNum2, seqNum3, seqNum4
 - 2487.75,2492.00,2487.50,2487.50,41,110,916,916
 - 2483.75,2488.00,2483.50,2483.50,925,1424,3114,3114
 - 2479.75,2484.50,2479.50,2479.50,3120,3275,6368,6368
@@ -131,6 +131,7 @@ we will track new highs/lows:
 - .
 - .
 - .
+
 until, at row 217, we hit one of our targets:
 
 - 2018-12-27T15:02:22,916,2487.50,3,-1,4,10,-7 // low target hit!
