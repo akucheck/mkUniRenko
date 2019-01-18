@@ -84,7 +84,7 @@ let complete (price : float) (seqNum : string) (tickVal : float)
             + (tickVal * float openParm * float openParmFactor)
     
     let completedBarHigh = openBar.uHigh
-    let completedBarLow = openBar.uLow
+    let completedBarLow = min completedBarOpen openBar.uLow // openBar.uLow
     let completedBarClose = price
     let completedBarDirection = "D"
     
@@ -178,6 +178,10 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     let priorClose = setPriorClose theBar
     let priceTargets = createPriceTargs priorClose tickVal trdParm revParm
     let nOpen, nSeqNum1 = setOpenIfNec theInputRow theBar
+    // initialize low, high to same values as open 
+    //  TODO: revisit this   
+    // let initHigh, initSeqNum2 = nOpen, nSeqNum1
+    // let initLow, initSeqNum3 = nOpen, nSeqNum1
     let nHigh, nSeqNum2 = checkForHigherHigh theInputRow theBar
     let nLow, nSeqNum3 = checkForLowerLow theInputRow theBar
     
