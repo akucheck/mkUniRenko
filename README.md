@@ -15,12 +15,13 @@ Expected input: the standard "shrink" format that contains one row for each
 price change during the course of a session.  That data has been run through 
 through the markLast to append a LastFlag:
 
-- dateTime, seqNum, volume, deltaFactor, occur, aggVol, aggDelta, LastFlag
-- 2018-12-27T15:00:00,41,2491.50,1,-1,41,205,-5,X
-- 2018-12-27T15:00:00,43,2491.25,1,-1,2,3,-2,X
-- 2018-12-27T15:00:00,44,2491.00,1,-1,1,2,-1,X
-- 2018-12-27T15:00:00,45,2491.25,1,1,1,2,1,X
-- 2018-12-27T15:00:00,47,2491.50,1,1,2,3,0,X
+dateTime, seqNum, volume, deltaFactor, occur, aggVol, aggDelta, LastFlag
+
+* 2018-12-27T15:00:00,41,2491.50,1,-1,41,205,-5,X
+* 2018-12-27T15:00:00,43,2491.25,1,-1,2,3,-2,X
+* 2018-12-27T15:00:00,44,2491.00,1,-1,1,2,-1,X
+* 2018-12-27T15:00:00,45,2491.25,1,1,1,2,1,X
+* 2018-12-27T15:00:00,47,2491.50,1,1,2,3,0,X
 
 Expected output: a UniRenko bar file
 
