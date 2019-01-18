@@ -178,12 +178,13 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
     let priorClose = setPriorClose theBar
     let priceTargets = createPriceTargs priorClose tickVal trdParm revParm
     let nOpen, nSeqNum1 = setOpenIfNec theInputRow theBar
+    //  TODO: revisit this  
     // initialize low, high to same values as open 
-    //  TODO: revisit this   
     // let initHigh, initSeqNum2 = nOpen, nSeqNum1
     // let initLow, initSeqNum3 = nOpen, nSeqNum1
     let nHigh, nSeqNum2 = checkForHigherHigh theInputRow theBar
     let nLow, nSeqNum3 = checkForLowerLow theInputRow theBar
+    let timeNow = System.DateTime.Now.ToLongTimeString()
     
     let currBar = //  assemble bar
         { uOpen = nOpen
@@ -196,11 +197,13 @@ let buildBars (clParams : StreamWriter * int * int * int * float)
           seqNum2 = nSeqNum2
           seqNum3 = nSeqNum3
           seqNum4 = "unassigned" }
-    
+    // ========================================================
+    // handle all bar completion activity here
     let barIsComplete, completedBarOhlc, newBar = // have we met a target?
         isBarComplete priceTargets theInputRow tickVal currBar openParm
     let barToBeWritten = (serializeShortOhlcRow completedBarOhlc)
     if (barIsComplete) then outFile.WriteLine barToBeWritten
+    // ========================================================
     let barState = // update accumulator state for next row of data
         match (barIsComplete) with
         | true -> newBar // create new bar, then rinse, repeat
