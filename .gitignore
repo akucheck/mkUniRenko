@@ -1,4 +1,5 @@
 paket-files/
+packages/
 data.in/
 data.out/
 bin/
